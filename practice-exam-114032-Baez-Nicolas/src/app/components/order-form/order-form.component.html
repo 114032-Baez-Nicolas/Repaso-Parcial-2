@@ -1,0 +1,131 @@
+<div class="container">
+  <h2 class="my-4">Crear Pedido</h2>
+
+  <form [formGroup]="orderForm" (ngSubmit)="submitOrder()">
+    <div class="mb-3">
+      <label for="customerName" class="form-label">Nombre del Cliente</label>
+      <input
+        type="text"
+        id="customerName"
+        formControlName="customerName"
+        class="form-control"
+        [ngClass]="{'is-invalid': orderForm.get('customerName')?.invalid && orderForm.get('customerName')?.touched}"
+      />
+      <div *ngIf="orderForm.get('customerName')?.invalid && orderForm.get('customerName')?.touched" class="invalid-feedback">
+        <small *ngIf="orderForm.get('customerName')?.errors?.['required']">El nombre es requerido.</small>
+        <small *ngIf="orderForm.get('customerName')?.errors?.['minlength']">Debe tener al menos 3 caracteres.</small>
+      </div>
+    </div>
+
+    <div class="mb-3">
+      <label for="email" class="form-label">Email</label>
+      <input
+        type="email"
+        id="email"
+        formControlName="email"
+        class="form-control"
+        [ngClass]="{'is-invalid': orderForm.get('email')?.invalid && orderForm.get('email')?.touched}"
+      />
+      <div *ngIf="orderForm.get('email')?.invalid && orderForm.get('email')?.touched" class="invalid-feedback">
+        <small *ngIf="orderForm.get('email')?.errors?.['required']">El email es requerido.</small>
+        <small *ngIf="orderForm.get('email')?.errors?.['email']">Formato de email no válido.</small>
+        <small *ngIf="orderForm.get('email')?.errors?.['limitExceeded']">Este email ha superado el límite de pedidos.</small>
+      </div>
+    </div>
+
+    <div formArrayName="products">
+      <h4>Productos</h4>
+
+      <div
+        *ngFor="let product of productsFormArray.controls; let i = index"
+        [formGroupName]="i"
+        class="card mb-3 p-3"
+      >
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label for="productId-{{ i }}" class="form-label">Producto</label>
+            <select
+              id="productId-{{ i }}"
+              formControlName="productId"
+              class="form-select"
+              (change)="onProductChange(i)"
+            >
+              <option value="" disabled selected>Seleccionar producto</option>
+              <option *ngFor="let product of products" [value]="product.id">{{ product.name }}</option>
+            </select>
+            <div *ngIf="productsFormArray.at(i).get('productId')?.invalid && productsFormArray.at(i).get('productId')?.touched" class="invalid-feedback">
+              <small>Debe seleccionar un producto.</small>
+            </div>
+          </div>
+
+          <div class="col-md-2 mb-3">
+            <label for="quantity-{{ i }}" class="form-label">Cantidad</label>
+            <input
+              type="number"
+              id="quantity-{{ i }}"
+              formControlName="quantity"
+              class="form-control"
+            />
+            <div *ngIf="productsFormArray.at(i).get('quantity')?.invalid && productsFormArray.at(i).get('quantity')?.touched" class="invalid-feedback">
+              <small *ngIf="productsFormArray.at(i).get('quantity')?.errors?.['invalidQuantity']">La cantidad debe ser mayor a 0 y no exceder el stock.</small>
+            </div>
+          </div>
+
+          <div class="col-md-2 mb-3">
+            <label for="price-{{ i }}" class="form-label">Precio</label>
+            <input
+              type="text"
+              id="price-{{ i }}"
+              formControlName="price"
+              class="form-control"
+              [disabled]="orderForm.invalid || !isProductsSelected()"
+            />
+          </div>
+
+          <div class="col-md-2 mb-3">
+            <label for="stock-{{ i }}" class="form-label">Stock</label>
+            <input
+              type="text"
+              id="stock-{{ i }}"
+              formControlName="stock"
+              class="form-control"
+              [disabled]="orderForm.invalid || !isProductsSelected()"
+            />
+          </div>
+
+          <div class="col-md-2 mb-3 d-flex align-items-end">
+            <button type="button" class="btn btn-danger" (click)="removeProduct(i)">Eliminar</button>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="btn btn-primary mb-3" (click)="addProduct()" [disabled]="isAddProductDisabled">
+        Agregar Producto
+      </button>
+    </div>
+
+    <div class="mb-3">
+      <label for="total" class="form-label">Total</label>
+      <input
+        type="text"
+        id="total"
+        formControlName="total"
+        class="form-control"
+        [attr.readonly]="true"
+        [disabled]="orderForm.invalid || !isProductsSelected()"
+      />
+      <div *ngIf="isSubmitDisabled && totalQuantity > 10" class="alert alert-warning mt-2">
+        El total de unidades no puede exceder las 10.
+      </div>
+    </div>
+    
+    <button type="submit" class="btn btn-success" [disabled]="isSubmitDisabled">
+      Enviar Pedido
+    </button>
+    
+  </form>
+
+  <div *ngIf="errorMessage" class="alert alert-danger mt-3">
+    {{ errorMessage }}
+  </div>
+</div>
